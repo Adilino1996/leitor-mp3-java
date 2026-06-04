@@ -1,0 +1,14 @@
+{
+    "java.project.sourcePaths": ["src"],
+    "java.project.outputPath": "bin",
+    "java.project.referencedLibraries": [
+        "C:/javafx-sdk/lib/javafx.base.jar",
+        "C:/javafx-sdk/lib/javafx.controls.jar",
+        "C:/javafx-sdk/lib/javafx.fxml.jar",
+        "C:/javafx-sdk/lib/javafx.graphics.jar",
+        "C:/javafx-sdk/lib/javafx.media.jar",
+        "C:/javafx-sdk/lib/javafx.swing.jar",
+        "C:/javafx-sdk/lib/javafx.web.jar",
+        "mysql-connector-j-9.7.0.jar"
+    ]
+}
