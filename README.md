@@ -1,7 +1,6 @@
 # Leitor MP3 em Java
 
-Trabalho de Grupo — Conceção e Análise de Algoritmos  
-Universidade de Cabo Verde · 2025/2026
+Trabalho de Turma — Conceção e Análise de Algoritmos  
 
 ---
 
