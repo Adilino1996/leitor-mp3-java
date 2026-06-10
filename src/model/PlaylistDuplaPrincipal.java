@@ -1,19 +1,19 @@
 package model;
 
-public class PlaylistDupla {
-    private NoMusica inicio;
-    private NoMusica fim;
-    private NoMusica atualMusica;
+public class PlaylistDuplaPrincipal {
+    private NoMusicaPrincipal inicio;
+    private NoMusicaPrincipal fim;
+    private NoMusicaPrincipal atualMusica;
     private int tamanho;
     
-    public PlaylistDupla() {
+    public PlaylistDuplaPrincipal() {
         this.inicio = null;
         this.fim = null;
         this.atualMusica = null;
         this.tamanho = 0;
     }
 
-    public NoMusica getAtualMusica() {
+    public NoMusicaPrincipal getAtualMusica() {
         return atualMusica;
     }
 
@@ -21,7 +21,19 @@ public class PlaylistDupla {
         return tamanho;
     }
 
-     //verificar se a lista esta vazia
+     public NoMusicaPrincipal getInicio() {
+        return inicio;
+    }
+
+    public NoMusicaPrincipal getFim() {
+        return fim;
+    }
+
+    public void setAtualMusica(NoMusicaPrincipal atualMusica) {
+        this.atualMusica = atualMusica;
+    }
+
+    //verificar se a lista esta vazia
     private boolean isVazia(){
         if (inicio == null || fim == null) {
             return true;
@@ -31,7 +43,7 @@ public class PlaylistDupla {
 
     public void adicionarMusica(String tituloMusica,String artistaMusica,String caminhoFicheiro){
         //criar um NO
-        NoMusica novaMusica = new NoMusica(tituloMusica, artistaMusica, caminhoFicheiro); 
+        NoMusicaPrincipal novaMusica = new NoMusicaPrincipal(tituloMusica, artistaMusica, caminhoFicheiro); 
         //se a lista estiver vazia quer dizer que o NO a inserir sera o primeiro NO e o ultimo NO e nao tera um anterior e proximo 
         if (isVazia()) {
             this.inicio = novaMusica;
@@ -54,8 +66,8 @@ public class PlaylistDupla {
             return;
         }
 
-        NoMusica cursor = inicio;
-        NoMusica encontrado = null;
+        NoMusicaPrincipal cursor = inicio;
+        NoMusicaPrincipal encontrado = null;
         while (cursor != null) {
             if (cursor.getTituloMusica().equalsIgnoreCase(titulo)) {
                  encontrado = cursor;
@@ -78,7 +90,7 @@ public class PlaylistDupla {
         }
 
         if (encontrado == inicio) {//caso for primeiro no 
-            NoMusica segundoNo = encontrado.getProximo();
+            NoMusicaPrincipal segundoNo = encontrado.getProximo();
             this.inicio = segundoNo;
             segundoNo.setAnterior(null);
             if (encontrado == atualMusica) {//caso musica a eliminar for atual musica
@@ -89,7 +101,7 @@ public class PlaylistDupla {
         }
 
         if (encontrado == fim) {//caso for ultimo no
-            NoMusica penultimo = encontrado.getAnterior();
+            NoMusicaPrincipal penultimo = encontrado.getAnterior();
             this.fim = penultimo;
             penultimo.setProximo(null);
             if (encontrado == atualMusica) {
@@ -99,8 +111,8 @@ public class PlaylistDupla {
             return;
         }
 
-        NoMusica anterior = encontrado.getAnterior();
-        NoMusica proximo = encontrado.getProximo();
+        NoMusicaPrincipal anterior = encontrado.getAnterior();
+        NoMusicaPrincipal proximo = encontrado.getProximo();
         anterior.setProximo(proximo);
         proximo.setAnterior(anterior);
        if (encontrado == atualMusica) {
@@ -115,7 +127,7 @@ public class PlaylistDupla {
             return;
         }
 
-        NoMusica cursor = inicio;
+        NoMusicaPrincipal cursor = inicio;
         int contador = 1;
         while (cursor != null) {
             if (cursor == atualMusica) {
@@ -153,4 +165,16 @@ public class PlaylistDupla {
         }
          System.out.println("Musica a tocar : " + atualMusica);
     }
+
+    public NoMusicaPrincipal getMusicas() {
+    return inicio;
+    }
+
+    //no main por exemplo
+    /*NoMusicaPrincipal cursor = playlist.getMusicas();
+
+     while (cursor != null) {
+     System.out.println(cursor);
+     cursor = cursor.getProximo();
+} */
 }
