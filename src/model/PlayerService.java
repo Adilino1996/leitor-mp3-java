@@ -3,24 +3,24 @@ package model;
 import java.io.File;
 import java.util.Random;
 
-public class PlayerServicePrincipal {
-    private PlaylistDuplaPrincipal playlist;
+public class PlayerService {
+    private PlaylistDupla playlist;
     private boolean tocando;
     private boolean pausado;
     private String modoRepeat;
 
-    public PlayerServicePrincipal(PlaylistDuplaPrincipal playlist) {
+    public PlayerService(PlaylistDupla playlist) {
         this.playlist = playlist;
         this.tocando = false;
         this.pausado = false;
         this.modoRepeat = "OFF";
     }
 
-    public PlaylistDuplaPrincipal getPlaylist() {
+    public PlaylistDupla getPlaylist() {
         return playlist;
     }
 
-    public void setPlaylist(PlaylistDuplaPrincipal playlist) {
+    public void setPlaylist(PlaylistDupla playlist) {
         this.playlist = playlist;
     }
 
@@ -36,7 +36,7 @@ public class PlayerServicePrincipal {
         return modoRepeat;
     }
 
-    public NoMusicaPrincipal play(){
+    public NoMusica play(){
         if (playlist.getAtualMusica() == null) {
             System.out.println("Não existe música para reproduzir");
             return null;
@@ -48,7 +48,7 @@ public class PlayerServicePrincipal {
         return playlist.getAtualMusica();
     }
 
-    public NoMusicaPrincipal pause(){
+    public NoMusica pause(){
         if (!tocando) {
            System.out.println("Nao existe musica tocando");
            return null;
@@ -66,14 +66,14 @@ public class PlayerServicePrincipal {
         System.out.println("Reprodução parada");
     }
 
-    public NoMusicaPrincipal next(){
+    public NoMusica next(){
         this.stop();
         this.playlist.next();
         this.play();
         return playlist.getAtualMusica();
     }
 
-    public NoMusicaPrincipal previous(){
+    public NoMusica previous(){
         this.stop();
         this.playlist.previous();
         this.play();
@@ -90,9 +90,9 @@ public class PlayerServicePrincipal {
         }
         System.out.println("Modo repeat : " + modoRepeat);
         return modoRepeat;
-    }//como estou a usar lista duplamente ligada entao nao posso acessar posiçao por posiçao svou gerar posiçao aleatoria e percorrer a lista ate a posiçao
+    }
 
-    public NoMusicaPrincipal shuffle() {
+    public NoMusica shuffle() {
 
     //como estou a usar lista duplamente ligada entao nao posso acessar posiçao por posiçao svou gerar posiçao aleatoria e percorrer a lista ate a posiçao    
     if (playlist.getTamanho() == 0) {
@@ -112,7 +112,7 @@ public class PlayerServicePrincipal {
     //"gerar" numero aleatorio
     Random random = new Random();
 
-    NoMusicaPrincipal musicaSorteada;
+    NoMusica musicaSorteada;
 
     do {//para nao deixar que a musica escolhida seja o que ja esta a tocar entao vai ficar gerando uma nova posiçao e percorendo a lista ate nao ser a que ja esta sendo reproduzida
 

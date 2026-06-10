@@ -1,13 +1,13 @@
 package model;
 
-public class NoMusicaPrincipal {
+public class NoMusica {
     private String tituloMusica;
     private String artistaMusica;
     private String caminhoFicheiro;
-    private NoMusicaPrincipal anterior;
-    private NoMusicaPrincipal proximo;
+    private NoMusica anterior;
+    private NoMusica proximo;
         
-    public NoMusicaPrincipal(String tituloMusica, String artistaMusica, String caminhoFicheiro) {
+    public NoMusica(String tituloMusica, String artistaMusica, String caminhoFicheiro) {
         this.tituloMusica = tituloMusica;
         this.artistaMusica = artistaMusica;
         this.caminhoFicheiro = caminhoFicheiro;
@@ -39,19 +39,19 @@ public class NoMusicaPrincipal {
         this.caminhoFicheiro = caminhoFicheiro;
     }
 
-    public NoMusicaPrincipal getAnterior() {
+    public NoMusica getAnterior() {
         return anterior;
     }
 
-    public void setAnterior(NoMusicaPrincipal anterior) {
+    public void setAnterior(NoMusica anterior) {
         this.anterior = anterior;
     }
 
-    public NoMusicaPrincipal getProximo() {
+    public NoMusica getProximo() {
         return proximo;
     }
 
-    public void setProximo(NoMusicaPrincipal proximo) {
+    public void setProximo(NoMusica proximo) {
         this.proximo = proximo;
     }
 
