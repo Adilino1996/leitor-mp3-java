@@ -1,0 +1,256 @@
+package model;
+
+import model.NoMusica;
+import model.PlaylistDupla;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
+
+public class DatabaseUtil {
+
+    private static String URL;
+    private static String USER;
+    private static String PASSWORD;
+
+    static {
+        carregarConfiguracaoBD();
+    }
+
+    private static void carregarConfiguracaoBD() {
+        Properties props = new Properties();
+
+        try (FileInputStream fis = new FileInputStream("config/db.properties")) {
+            props.load(fis);
+
+            URL = props.getProperty("db.url");
+            USER = props.getProperty("db.user");
+            PASSWORD = props.getProperty("db.password");
+
+        } catch (IOException e) {
+            System.err.println("Erro ao carregar configuração da BD: " + e.getMessage());
+        }
+    }
+
+    public static Connection getConnection() throws SQLException {
+        return DriverManager.getConnection(URL, USER, PASSWORD);
+    }
+
+    public static boolean testConnection() {
+        try (Connection conn = getConnection()) {
+            return conn != null;
+        } catch (SQLException e) {
+            System.err.println("Erro na conexão: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public static boolean authenticateUser(String username, String password) {
+        String query = "SELECT password_hash FROM users WHERE username = ?";
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+
+            stmt.setString(1, username);
+
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                String storedHash = rs.getString("password_hash");
+                return hashPassword(password).equals(storedHash);
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Erro na autenticação: " + e.getMessage());
+        }
+
+        return false;
+    }
+
+    public static boolean registerUser(String username, String email, String password) {
+        String checkQuery = "SELECT id FROM users WHERE username = ? OR email = ?";
+        String insertQuery = "INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)";
+
+        try (Connection conn = getConnection()) {
+
+            PreparedStatement checkStmt = conn.prepareStatement(checkQuery);
+            checkStmt.setString(1, username);
+            checkStmt.setString(2, email);
+
+            ResultSet rs = checkStmt.executeQuery();
+
+            if (rs.next()) {
+                System.out.println("Já existe utilizador com este username ou email.");
+                return false;
+            }
+
+            PreparedStatement stmt = conn.prepareStatement(insertQuery);
+            stmt.setString(1, username);
+            stmt.setString(2, email);
+            stmt.setString(3, hashPassword(password));
+
+            return stmt.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            System.err.println("Erro ao registar utilizador: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public static int getUserId(String username) {
+        String query = "SELECT id FROM users WHERE username = ?";
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+
+            stmt.setString(1, username);
+
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return rs.getInt("id");
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Erro ao obter ID do utilizador: " + e.getMessage());
+        }
+
+        return -1;
+    }
+
+    public static boolean savePlaylist(int userId, String playlistName, PlaylistDupla playlist) {
+        try (Connection conn = getConnection()) {
+            conn.setAutoCommit(false);
+
+            int playlistId = obterOuCriarPlaylist(conn, userId, playlistName);
+
+            String deleteQuery = "DELETE FROM playlist_musicas WHERE playlist_id = ?";
+            PreparedStatement deleteStmt = conn.prepareStatement(deleteQuery);
+            deleteStmt.setInt(1, playlistId);
+            deleteStmt.executeUpdate();
+
+            String insertQuery = """
+                INSERT INTO playlist_musicas 
+                (playlist_id, titulo, artista, caminho_ficheiro, ordem)
+                VALUES (?, ?, ?, ?, ?)
+            """;
+
+            PreparedStatement insertStmt = conn.prepareStatement(insertQuery);
+
+            int ordem = 1;
+
+            for (NoMusica musica : playlist.getMusicas()) {
+                insertStmt.setInt(1, playlistId);
+                insertStmt.setString(2, musica.getTituloMusica());
+                insertStmt.setString(3, musica.getArtistaMusica());
+                insertStmt.setString(4, musica.getCaminhoFicheiro());
+                insertStmt.setInt(5, ordem);
+
+                insertStmt.addBatch();
+                ordem++;
+            }
+
+            insertStmt.executeBatch();
+
+            conn.commit();
+            return true;
+
+        } catch (SQLException e) {
+            System.err.println("Erro ao guardar playlist: " + e.getMessage());
+            return false;
+        }
+    }
+
+    private static int obterOuCriarPlaylist(Connection conn, int userId, String playlistName) throws SQLException {
+        String checkQuery = "SELECT id FROM playlists WHERE user_id = ? AND name = ?";
+
+        PreparedStatement checkStmt = conn.prepareStatement(checkQuery);
+        checkStmt.setInt(1, userId);
+        checkStmt.setString(2, playlistName);
+
+        ResultSet rs = checkStmt.executeQuery();
+
+        if (rs.next()) {
+            return rs.getInt("id");
+        }
+
+        String insertQuery = "INSERT INTO playlists (user_id, name) VALUES (?, ?)";
+
+        PreparedStatement insertStmt = conn.prepareStatement(insertQuery, Statement.RETURN_GENERATED_KEYS);
+        insertStmt.setInt(1, userId);
+        insertStmt.setString(2, playlistName);
+        insertStmt.executeUpdate();
+
+        ResultSet generatedKeys = insertStmt.getGeneratedKeys();
+
+        if (generatedKeys.next()) {
+            return generatedKeys.getInt(1);
+        }
+
+        throw new SQLException("Erro ao criar playlist.");
+    }
+
+    public static PlaylistDupla loadPlaylist(int userId, String playlistName) {
+        PlaylistDupla playlist = new PlaylistDupla();
+
+        String query = """
+            SELECT pm.titulo, pm.artista, pm.caminho_ficheiro
+            FROM playlist_musicas pm
+            INNER JOIN playlists p ON pm.playlist_id = p.id
+            WHERE p.user_id = ? AND p.name = ?
+            ORDER BY pm.ordem ASC
+        """;
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+
+            stmt.setInt(1, userId);
+            stmt.setString(2, playlistName);
+
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                playlist.adicionarMusica(
+                        rs.getString("titulo"),
+                        rs.getString("artista"),
+                        rs.getString("caminho_ficheiro")
+                );
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Erro ao carregar playlist: " + e.getMessage());
+        }
+
+        return playlist;
+    }
+
+    public static List<String> getUserPlaylists(int userId) {
+        List<String> playlists = new ArrayList<>();
+
+        String query = "SELECT name FROM playlists WHERE user_id = ? ORDER BY created_at DESC";
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+
+            stmt.setInt(1, userId);
+
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                playlists.add(rs.getString("name"));
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Erro ao listar playlists: " + e.getMessage());
+        }
+
+        return playlists;
+    }
+
+    private static String hashPassword(String password) {
+        return Integer.toHexString(password.hashCode());
+    }
+}
