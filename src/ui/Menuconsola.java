@@ -1,11 +1,10 @@
 package ui;
 
-public class Menuconsola {
 import model.NoMusica;
 import model.PlaylistDupla;
 import java.util.Scanner;
 
-public class MenuConsola {
+public class Menuconsola {
     private PlaylistDupla playlist;
     private Scanner scanner;
 
