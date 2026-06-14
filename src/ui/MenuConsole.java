@@ -17,7 +17,7 @@ public class MenuConsole {
         int opcao = 0;
         do {
             System.out.println("\n===== LEITOR MP3 =====");
-            System.out.println("[1] Carregar pasta de músicas");
+            System.out.println("[1] Carregar música");
             System.out.println("[2] Play");
             System.out.println("[3] Pause");
             System.out.println("[4] Next");
@@ -33,9 +33,9 @@ public class MenuConsole {
 
             switch (opcao) {
                 case 1:
-                    System.out.print("Caminho da pasta: ");
+                    System.out.print("Caminho da música (.mp3): ");
                     String caminho = ler.nextLine();
-                    carregarPasta(caminho);
+                    carregarMusica(caminho);
                     break;
                 case 2:
                     play();
@@ -69,22 +69,15 @@ public class MenuConsole {
         ler.close();
     }
 
-    private void carregarPasta(String caminho) {
-        java.io.File pasta = new java.io.File(caminho);
-        if (!pasta.exists() || !pasta.isDirectory()) {
-            System.out.println("Pasta inválida!");
+    private void carregarMusica(String caminho) {
+        java.io.File ficheiro = new java.io.File(caminho);
+        if (!ficheiro.exists() || !ficheiro.getName().endsWith(".mp3")) {
+            System.out.println("Ficheiro inválido! Tem de ser um ficheiro .mp3");
             return;
         }
-        java.io.File[] ficheiros = pasta.listFiles((dir, name) -> name.endsWith(".mp3"));
-        if (ficheiros == null || ficheiros.length == 0) {
-            System.out.println("Nenhum ficheiro MP3 encontrado.");
-            return;
-        }
-        for (java.io.File f : ficheiros) {
-            String titulo = f.getName().replace(".mp3", "");
-            playlist.adicionarMusica(titulo, "Desconhecido", f.getAbsolutePath());
-        }
-        System.out.println(ficheiros.length + " músicas carregadas!");
+        String titulo = ficheiro.getName().replace(".mp3", "");
+        playlist.adicionarMusica(titulo, "Desconhecido", ficheiro.getAbsolutePath());
+        System.out.println("Música adicionada: " + titulo);
     }
 
     private void play() {
