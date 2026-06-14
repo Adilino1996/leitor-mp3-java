@@ -5,18 +5,16 @@ import model.NoMusica;
 import model.PlaylistDupla;
 
 public class MenuConsole {
-    private PlaylistDupla playlist; // lista com todas as musicas
-    private Scanner ler; // para ler o que o utilizador escreve
+    private PlaylistDupla playlist;
+    private Scanner ler;
 
     public MenuConsole() {
-        this.playlist = new PlaylistDupla(); // cria a lista vazia
-        this.ler = new Scanner(System.in); // prepara para ler do teclado
+        this.playlist = new PlaylistDupla();
+        this.ler = new Scanner(System.in);
     }
 
     public void iniciar() {
         int opcao = 0;
-
-        // loop que repete o menu ate o utilizador escolher sair
         do {
             System.out.println("\n===== LEITOR MP3 =====");
             System.out.println("[1] Carregar pasta de músicas");
@@ -30,28 +28,26 @@ public class MenuConsole {
             System.out.println("[9] Sair");
             System.out.print("Escolha uma opção: ");
 
-            // le o numero que o utilizador escreveu
             opcao = ler.nextInt();
-            ler.nextLine(); // limpa o enter que fica no buffer
+            ler.nextLine();
 
-            // executa a acao consoante a opcao escolhida
             switch (opcao) {
                 case 1:
                     System.out.print("Caminho da pasta: ");
                     String caminho = ler.nextLine();
-                    carregarPasta(caminho); // vai buscar os mp3 da pasta
+                    carregarPasta(caminho);
                     break;
                 case 2:
-                    play(); // mostra a musica atual
+                    play();
                     break;
                 case 3:
                     System.out.println("⏸ Pausado.");
                     break;
                 case 4:
-                    playlist.next(); // avanca para a proxima musica
+                    playlist.next();
                     break;
                 case 5:
-                    playlist.previous(); // volta para a musica anterior
+                    playlist.previous();
                     break;
                 case 6:
                     System.out.println("🔁 Repetir.");
@@ -60,7 +56,7 @@ public class MenuConsole {
                     System.out.println("🔀 Shuffle.");
                     break;
                 case 8:
-                    playlist.listar(); // mostra todas as musicas da lista
+                    playlist.listar();
                     break;
                 case 9:
                     System.out.println("A sair...");
@@ -68,31 +64,24 @@ public class MenuConsole {
                 default:
                     System.out.println("Essa opção não existe, tenta outra vez!");
             }
-        } while (opcao != 9); // continua enquanto nao for 9
+        } while (opcao != 9);
 
-        ler.close(); // fecha o scanner no fim
+        ler.close();
     }
 
     private void carregarPasta(String caminho) {
         java.io.File pasta = new java.io.File(caminho);
-
-        // verifica se a pasta existe e e mesmo uma pasta
         if (!pasta.exists() || !pasta.isDirectory()) {
             System.out.println("Pasta inválida!");
             return;
         }
-
-        // filtra apenas os ficheiros mp3
         java.io.File[] ficheiros = pasta.listFiles((dir, name) -> name.endsWith(".mp3"));
-
         if (ficheiros == null || ficheiros.length == 0) {
             System.out.println("Nenhum ficheiro MP3 encontrado.");
             return;
         }
-
-        // adiciona cada mp3 a playlist
         for (java.io.File f : ficheiros) {
-            String titulo = f.getName().replace(".mp3", ""); // tira o .mp3 do nome
+            String titulo = f.getName().replace(".mp3", "");
             playlist.adicionarMusica(titulo, "Desconhecido", f.getAbsolutePath());
         }
         System.out.println(ficheiros.length + " músicas carregadas!");
@@ -100,8 +89,6 @@ public class MenuConsole {
 
     private void play() {
         NoMusica atual = playlist.getAtualMusica();
-
-        // verifica se ha alguma musica na lista
         if (atual == null) {
             System.out.println("Nenhuma música na playlist!");
             return;
@@ -110,6 +97,6 @@ public class MenuConsole {
     }
 
     public static void main(String[] args) {
-        new MenuConsole().iniciar(); // arranca o menu
+        new MenuConsole().iniciar();
     }
 }
