@@ -6,11 +6,11 @@ import model.PlaylistDupla;
 
 public class MenuConsole {
     private PlaylistDupla playlist;
-    private Scanner scanner;
+    private Scanner ler;
 
     public MenuConsole() {
         this.playlist = new PlaylistDupla();
-        this.scanner = new Scanner(System.in);
+        this.ler = new Scanner(System.in);
     }
 
     public void iniciar() {
@@ -28,13 +28,13 @@ public class MenuConsole {
             System.out.println("[9] Sair");
             System.out.print("Escolha uma opção: ");
 
-            opcao = scanner.nextInt();
-            scanner.nextLine();
+            opcao = ler.nextInt();
+            ler.nextLine();
 
             switch (opcao) {
                 case 1:
                     System.out.print("Caminho da pasta: ");
-                    String caminho = scanner.nextLine();
+                    String caminho = ler.nextLine();
                     carregarPasta(caminho);
                     break;
                 case 2:
@@ -66,7 +66,7 @@ public class MenuConsole {
             }
         } while (opcao != 9);
 
-        scanner.close();
+        ler.close();
     }
 
     private void carregarPasta(String caminho) {
