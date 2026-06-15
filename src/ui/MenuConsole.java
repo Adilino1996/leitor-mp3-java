@@ -33,9 +33,9 @@ public class MenuConsole {
 
             switch (opcao) {
                 case 1:
-                    System.out.print("Caminho da música (.mp3): ");
+                    System.out.print("Caminho da pasta: ");
                     String caminho = ler.nextLine();
-                    carregarMusica(caminho);
+                    carregarPasta(caminho);
                     break;
                 case 2:
                     play();
@@ -50,7 +50,7 @@ public class MenuConsole {
                     playlist.previous();
                     break;
                 case 6:
-                    System.out.println("🔁 Repetir.");
+                    System.out.println("🔁 Repetir ativado.");
                     break;
                 case 7:
                     System.out.println("🔀 Shuffle.");
@@ -69,15 +69,22 @@ public class MenuConsole {
         ler.close();
     }
 
-    private void carregarMusica(String caminho) {
-        java.io.File ficheiro = new java.io.File(caminho);
-        if (!ficheiro.exists() || !ficheiro.getName().endsWith(".mp3")) {
-            System.out.println("Ficheiro inválido! Tem de ser um ficheiro .mp3");
+     private void carregarPasta(String caminho) {
+        java.io.File pasta = new java.io.File(caminho);
+        if (!pasta.exists() || !pasta.isDirectory()) {
+            System.out.println("Pasta inválida!");
             return;
         }
-        String titulo = ficheiro.getName().replace(".mp3", "");
-        playlist.adicionarMusica(titulo, "Desconhecido", ficheiro.getAbsolutePath());
-        System.out.println("Música adicionada: " + titulo);
+        java.io.File[] ficheiros = pasta.listFiles((dir, name) -> name.endsWith(".mp3"));
+        if (ficheiros == null || ficheiros.length == 0) {
+            System.out.println("Nenhum ficheiro MP3 encontrado.");
+            return;
+        }
+        for (java.io.File f : ficheiros) {
+            String titulo = f.getName().replace(".mp3", "");
+            playlist.adicionarMusica(titulo, "Desconhecido", f.getAbsolutePath());
+        }
+        System.out.println(ficheiros.length + " músicas carregadas!");
     }
 
     private void play() {
