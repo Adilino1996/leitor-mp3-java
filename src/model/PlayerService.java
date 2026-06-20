@@ -2,12 +2,15 @@ package model;
 
 import java.io.File;
 import java.util.Random;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
 
 public class PlayerService {
     private PlaylistDupla playlist;
     private boolean tocando;
     private boolean pausado;
     private String modoRepeat;
+    private MediaPlayer mediaPlayer; // ← ADICIONADO
 
     public PlayerService(PlaylistDupla playlist) {
         this.playlist = playlist;
@@ -36,23 +39,52 @@ public class PlayerService {
         return modoRepeat;
     }
 
-    public NoMusica play(){
+    // ← MÉTODO ADICIONADO
+    public void setVolume(double volume) {
+        if (mediaPlayer != null) {
+            mediaPlayer.setVolume(volume);
+        }
+    }
+
+    public NoMusica play() {
         if (playlist.getAtualMusica() == null) {
             System.out.println("Não existe música para reproduzir");
             return null;
         }
 
+        // para o player anterior
+        if (mediaPlayer != null) {
+            mediaPlayer.stop();
+            mediaPlayer.dispose();
+        }
+
+        // toca o ficheiro real
+        try {
+            File f = new File(playlist.getAtualMusica().getCaminhoFicheiro());
+            Media media = new Media(f.toURI().toString());
+            mediaPlayer = new MediaPlayer(media);
+            mediaPlayer.play();
+
+            // quando acaba passa para a proxima
+            mediaPlayer.setOnEndOfMedia(() -> next());
+
+        } catch (Exception e) {
+            System.out.println("Erro ao tocar: " + e.getMessage());
+        }
+
         this.tocando = true;
-        this.pausado =false;
+        this.pausado = false;
         System.out.println("Tocando: " + playlist.getAtualMusica());
         return playlist.getAtualMusica();
     }
 
-    public NoMusica pause(){
+    public NoMusica pause() {
         if (!tocando) {
-           System.out.println("Nao existe musica tocando");
-           return null;
+            System.out.println("Nao existe musica tocando");
+            return null;
         }
+
+        if (mediaPlayer != null) mediaPlayer.pause(); // ← ADICIONADO
 
         this.tocando = false;
         this.pausado = true;
@@ -60,32 +92,35 @@ public class PlayerService {
         return playlist.getAtualMusica();
     }
 
-    public void stop(){
+    public void stop() {
+        if (mediaPlayer != null) { // ← ADICIONADO
+            mediaPlayer.stop();
+            mediaPlayer.dispose();
+            mediaPlayer = null;
+        }
         this.tocando = false;
         this.pausado = false;
         System.out.println("Reprodução parada");
     }
 
-    public NoMusica next(){
-        this.stop();
+    public NoMusica next() {
         this.playlist.next();
         this.play();
         return playlist.getAtualMusica();
     }
 
-    public NoMusica previous(){
-        this.stop();
+    public NoMusica previous() {
         this.playlist.previous();
         this.play();
         return playlist.getAtualMusica();
     }
 
-    public String repeat(){
+    public String repeat() {
         if (modoRepeat.equalsIgnoreCase("OFF")) {
             modoRepeat = "ONE";
-        }else if(modoRepeat.equalsIgnoreCase("ONE")){
+        } else if (modoRepeat.equalsIgnoreCase("ONE")) {
             modoRepeat = "ALL";
-        }else{
+        } else {
             modoRepeat = "OFF";
         }
         System.out.println("Modo repeat : " + modoRepeat);
@@ -93,91 +128,62 @@ public class PlayerService {
     }
 
     public NoMusica shuffle() {
-
-    //como estou a usar lista duplamente ligada entao nao posso acessar posiçao por posiçao svou gerar posiçao aleatoria e percorrer a lista ate a posiçao    
-    if (playlist.getTamanho() == 0) {
-        System.out.println("Playlist vazia");
-        return null;
-    }
-
-    // Se só existir uma música
-    if (playlist.getTamanho() == 1) {
-        System.out.println("Existe apenas uma música na playlist.");
-        return playlist.getAtualMusica();
-    }
-
-
-    stop();
-
-    //"gerar" numero aleatorio
-    Random random = new Random();
-
-    NoMusica musicaSorteada;
-
-    do {//para nao deixar que a musica escolhida seja o que ja esta a tocar entao vai ficar gerando uma nova posiçao e percorendo a lista ate nao ser a que ja esta sendo reproduzida
-
-        int posicao = random.nextInt(playlist.getTamanho());
-
-        //para poder percorer
-        musicaSorteada = playlist.getInicio();
-
-        for (int i = 0; i < posicao; i++) {
-            musicaSorteada = musicaSorteada.getProximo();
+        if (playlist.getTamanho() == 0) {
+            System.out.println("Playlist vazia");
+            return null;
         }
 
-    } while (musicaSorteada == playlist.getAtualMusica());
+        if (playlist.getTamanho() == 1) {
+            System.out.println("Existe apenas uma música na playlist.");
+            return playlist.getAtualMusica();
+        }
 
-    playlist.setAtualMusica(musicaSorteada);
+        stop();
 
-    System.out.println("Shuffle selecionou:");
-    System.out.println(musicaSorteada);
+        Random random = new Random();
+        NoMusica musicaSorteada;
 
-    play();
+        do {
+            int posicao = random.nextInt(playlist.getTamanho());
+            musicaSorteada = playlist.getInicio();
+            for (int i = 0; i < posicao; i++) {
+                musicaSorteada = musicaSorteada.getProximo();
+            }
+        } while (musicaSorteada == playlist.getAtualMusica());
 
-    return musicaSorteada;
-   }
+        playlist.setAtualMusica(musicaSorteada);
+        System.out.println("Shuffle selecionou: " + musicaSorteada);
+        play();
+        return musicaSorteada;
+    }
 
     public void carregarMP3DaPasta(String caminhoPasta) {
+        File pasta = new File(caminhoPasta);
 
-    File pasta = new File(caminhoPasta);
-
-    if (!pasta.exists() || !pasta.isDirectory()) {
-        System.out.println("Pasta invalida.");
-        return;
-    }
-
-    File[] ficheiros = pasta.listFiles();
-
-    if (ficheiros == null || ficheiros.length == 0) {
-        System.out.println("Nenhum ficheiro encontrado.");
-        return;
-    }
-
-    int contador = 0;
-
-    for (File ficheiro : ficheiros) {
-
-        if (ficheiro.isFile()
-                && ficheiro.getName().toLowerCase().endsWith(".mp3")) {
-
-            String titulo = ficheiro.getName()
-                    .substring(0, ficheiro.getName().length() - 4);
-
-            String artista = "Desconhecido";
-
-            String caminhoCompleto = ficheiro.getAbsolutePath();
-
-            playlist.adicionarMusica(
-                    titulo,
-                    artista,
-                    caminhoCompleto
-            );
-
-            contador++;
+        if (!pasta.exists() || !pasta.isDirectory()) {
+            System.out.println("Pasta invalida.");
+            return;
         }
+
+        File[] ficheiros = pasta.listFiles();
+
+        if (ficheiros == null || ficheiros.length == 0) {
+            System.out.println("Nenhum ficheiro encontrado.");
+            return;
+        }
+
+        int contador = 0;
+
+        for (File ficheiro : ficheiros) {
+            if (ficheiro.isFile() && ficheiro.getName().toLowerCase().endsWith(".mp3")) {
+                String titulo = ficheiro.getName().substring(0, ficheiro.getName().length() - 4);
+                String artista = "Desconhecido";
+                String caminhoCompleto = ficheiro.getAbsolutePath();
+                playlist.adicionarMusica(titulo, artista, caminhoCompleto);
+                contador++;
+            }
+        }
+
+        System.out.println(contador + " musica(s) carregada(s).");
     }
-
-    System.out.println(contador + " musica(s) carregada(s).");
-}
-
 }
