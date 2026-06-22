@@ -170,6 +170,13 @@ public class PlaylistDupla {
     return inicio;
     }
 
+    public void limpar() {
+        inicio = null;
+        fim = null;
+        atualMusica = null;
+        tamanho = 0;
+    }
+
     //no main por exemplo
     /*NoMusicaPrincipal cursor = playlist.getMusicas();
 
