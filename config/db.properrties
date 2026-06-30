@@ -1,4 +1,0 @@
-db.url=jdbc:mysql://localhost:3306/mp3_player
-db.user=  //user da base de dados
-db.password=  //palavra passe
-new FileInputStream("../config/db.properties")
