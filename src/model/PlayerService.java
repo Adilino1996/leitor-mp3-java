@@ -2,15 +2,20 @@ package model;
 
 import java.io.File;
 import java.util.Random;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.StringBinding;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
+import javafx.util.Duration;
 
 public class PlayerService {
     private PlaylistDupla playlist;
     private boolean tocando;
     private boolean pausado;
     private String modoRepeat;
-    private MediaPlayer mediaPlayer; // ← ADICIONADO
+    private MediaPlayer mediaPlayer;
+    private double volumeAtual = 0.7;
+    private String ultimoErro;
 
     public PlayerService(PlaylistDupla playlist) {
         this.playlist = playlist;
@@ -39,37 +44,122 @@ public class PlayerService {
         return modoRepeat;
     }
 
-    // ← MÉTODO ADICIONADO
     public void setVolume(double volume) {
+        this.volumeAtual = volume;
         if (mediaPlayer != null) {
             mediaPlayer.setVolume(volume);
         }
     }
 
+    public MediaPlayer getMediaPlayer() {
+        return mediaPlayer;
+    }
+
+    public void seek(double progresso) {
+        if (mediaPlayer != null && mediaPlayer.getTotalDuration() != null) {
+            Duration target = mediaPlayer.getTotalDuration().multiply(progresso);
+            mediaPlayer.seek(target);
+        }
+    }
+
+    public Duration getDuracaoTotal() {
+        if (mediaPlayer == null) return Duration.UNKNOWN;
+        return mediaPlayer.getTotalDuration();
+    }
+
+    public Duration getTempoAtual() {
+        if (mediaPlayer == null) return Duration.ZERO;
+        return mediaPlayer.getCurrentTime();
+    }
+
+    public String formatDuration(Duration d) {
+        if (d == null || d.isUnknown()) return "00:00";
+        int totalSec = (int) d.toSeconds();
+        return String.format("%02d:%02d", totalSec / 60, totalSec % 60);
+    }
+
+    public StringBinding criarStringTempo() {
+        if (mediaPlayer == null) {
+            return Bindings.createStringBinding(() -> "00:00 / 00:00");
+        }
+        return Bindings.createStringBinding(() ->
+            formatDuration(mediaPlayer.getCurrentTime()) + " / " +
+            formatDuration(mediaPlayer.getTotalDuration()),
+            mediaPlayer.currentTimeProperty(),
+            mediaPlayer.totalDurationProperty()
+        );
+    }
+
+    public String getErro() {
+        if (ultimoErro != null) return ultimoErro;
+        if (mediaPlayer != null && mediaPlayer.getError() != null) {
+            return mediaPlayer.getError().getMessage();
+        }
+        return null;
+    }
+
+    public void limparErro() {
+        ultimoErro = null;
+    }
+
+    public NoMusica resume() {
+        if (pausado && mediaPlayer != null) {
+            mediaPlayer.play();
+            this.tocando = true;
+            this.pausado = false;
+            System.out.println("Retomando: " + playlist.getAtualMusica());
+            return playlist.getAtualMusica();
+        }
+        return play();
+    }
+
     public NoMusica play() {
+        ultimoErro = null;
+
         if (playlist.getAtualMusica() == null) {
-            System.out.println("Não existe música para reproduzir");
+            ultimoErro = "Não existe música para reproduzir";
+            System.out.println(ultimoErro);
             return null;
         }
 
-        // para o player anterior
         if (mediaPlayer != null) {
             mediaPlayer.stop();
             mediaPlayer.dispose();
+            mediaPlayer = null;
         }
 
-        // toca o ficheiro real
         try {
             File f = new File(playlist.getAtualMusica().getCaminhoFicheiro());
+            if (!f.exists()) {
+                ultimoErro = "Ficheiro não encontrado: " + f.getAbsolutePath();
+                System.out.println(ultimoErro);
+                return null;
+            }
             Media media = new Media(f.toURI().toString());
             mediaPlayer = new MediaPlayer(media);
+            mediaPlayer.setVolume(volumeAtual);
+            mediaPlayer.setOnError(() -> {
+                ultimoErro = "Erro ao reproduzir: " + mediaPlayer.getError().getMessage();
+                System.out.println(ultimoErro);
+            });
             mediaPlayer.play();
 
-            // quando acaba passa para a proxima
-            mediaPlayer.setOnEndOfMedia(() -> next());
+            mediaPlayer.setOnEndOfMedia(() -> {
+                if (modoRepeat.equals("ONE")) {
+                    play();
+                } else if (modoRepeat.equals("ALL")) {
+                    next();
+                } else {
+                    next();
+                }
+            });
 
         } catch (Exception e) {
-            System.out.println("Erro ao tocar: " + e.getMessage());
+            ultimoErro = "Erro ao tocar: " + e.getClass().getSimpleName() + " - " + e.getMessage();
+            System.out.println(ultimoErro);
+            this.tocando = false;
+            this.pausado = false;
+            return null;
         }
 
         this.tocando = true;

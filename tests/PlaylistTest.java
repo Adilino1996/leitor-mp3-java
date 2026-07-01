@@ -196,11 +196,25 @@ public class PlaylistTest {
     }
 
     static PlaylistDupla criarPlaylist() {
+        criarFicheiroTeste("musica1.mp3");
+        criarFicheiroTeste("musica2.mp3");
+        criarFicheiroTeste("musica3.mp3");
         PlaylistDupla playlist = new PlaylistDupla();
         playlist.adicionarMusica("Musica 1", "Artista 1", "musica1.mp3");
         playlist.adicionarMusica("Musica 2", "Artista 2", "musica2.mp3");
         playlist.adicionarMusica("Musica 3", "Artista 3", "musica3.mp3");
         return playlist;
+    }
+
+    static void criarFicheiroTeste(String nome) {
+        try {
+            java.io.File f = new java.io.File(nome);
+            if (!f.exists()) {
+                f.createNewFile();
+            }
+        } catch (Exception e) {
+            // ignorar
+        }
     }
 
     private static void assertEquals(Object esperado, Object atual, String mensagem) {
