@@ -19,6 +19,21 @@
 *.tar.gz
 *.rar
 
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+# virtual machine crash logs
 hs_err_pid*
 replay_pid*
+
+# Ficheiros de música (não devem estar no repositório)
+*.mp3
+*.wav
+*.m4a
+
+# Pastas de compilação
+bin/
+out/
+build/
+target/
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
