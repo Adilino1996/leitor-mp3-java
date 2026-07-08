@@ -383,6 +383,8 @@ public class JanelaPrincipal extends Application {
             "-fx-text-alignment: center;");
         labelTituloMusica.setWrapText(true);
         labelTituloMusica.setMaxWidth(500);
+        labelTituloMusica.setAlignment(Pos.CENTER);
+        labelTituloMusica.setMaxWidth(Double.MAX_VALUE);
 
         labelArtista = new Label("—");
         labelArtista.setStyle(
@@ -423,7 +425,12 @@ public class JanelaPrincipal extends Application {
     private HBox buildWaveBars() {
         waveBars = new ArrayList<>();
         HBox box = new HBox(3);
-        box.setAlignment(Pos.CENTER);
+        box.setAlignment(Pos.BOTTOM_CENTER);
+
+        // Altura fixa: o container nao muda de tamanho mesmo quando as barras animam
+        box.setMinHeight(60);
+        box.setPrefHeight(60);
+        box.setMaxHeight(60);
         int[] heights = {8, 14, 20, 12, 24, 16, 28, 18, 24, 14, 20, 10, 16, 24, 12, 18, 28, 14, 22, 10};
         for (int h : heights) {
             Region bar = new Region();
